@@ -1,0 +1,21 @@
+{
+  "name": "seti-icons-react",
+  "version": "0.1.0",
+  "description": "Seti UI icons for react.",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hopeless-programmer-online/seti-icons-react.git"
+  },
+  "author": {
+    "name": "Hopeless Programmer",
+    "email": "me@hopeless-programmer.online"
+  },
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/hopeless-programmer-online/seti-icons-react/issues"
+  },
+  "homepage": "https://github.com/hopeless-programmer-online/seti-icons-react#readme",
+  "engines": {
+    "node": "^14.15.1"
+  }
+}

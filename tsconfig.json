@@ -1,4 +1,7 @@
 {
+    "include": [
+        "./src/",
+    ],
     "compilerOptions": {
         "target": "ESNext",
         "lib": [
@@ -7,6 +10,9 @@
         "module": "CommonJS",
         "moduleResolution": "Node",
         "resolveJsonModule": true,
-        "jsx": "react"
+        "esModuleInterop": true,
+        "jsx": "react",
+        "outDir": "./dist/",
+        "declaration": true,
     },
 }

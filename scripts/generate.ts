@@ -1,8 +1,8 @@
 import * as path from 'path'
 import * as fs from 'fs'
 import { js2xml, xml2js, Element, ElementCompact } from 'xml-js'
-import * as svgs from 'seti-icons/lib/icons.json'
-import * as definitions from 'seti-icons/lib/definitions.json'
+import svgs from 'seti-icons/lib/icons.json'
+import definitions from 'seti-icons/lib/definitions.json'
 import * as colorsMapping from './colors.json'
 
 type Fills = { [key : string] : string }
@@ -39,6 +39,30 @@ function findFills(name : string) : Fills {
 function buildIcon(svg : string) {
     const xml = xml2js(svg, { alwaysArray : true })
 
+    function iterate(element : Element | ElementCompact) {
+        const { elements, attributes } = element
+
+        if (elements) elements.forEach(element => {
+            if (element.type !== 'text') {
+                iterate(element)
+
+                return
+            }
+
+            element.text = `{${JSON.stringify(element.text)}}`
+        })
+
+        if (attributes) {
+            if (attributes.class) {
+                attributes.className = attributes.class
+
+                delete attributes.class
+            }
+        }
+    }
+
+    iterate(xml)
+
     xml.elements[0].attributes = {
         ...xml.elements[0].attributes,
         fill : '%FILL%',
@@ -61,6 +85,7 @@ function buildIcon(svg : string) {
         + `        ` + br
         + `        return (` + br
         + (
+            '            // ' + svg + br +
             '            ' +
             js2xml(xml, { spaces : 4 })
                 .replace(/\n/g, '\n            ')

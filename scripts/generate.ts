@@ -3,7 +3,8 @@ import * as fs from 'fs'
 import { js2xml, xml2js, Element, ElementCompact } from 'xml-js'
 import svgs from 'seti-icons/lib/icons.json'
 import definitions from 'seti-icons/lib/definitions.json'
-import * as colorsMapping from './colors.json'
+import { default as colorsMapping } from './colors.json'
+import { default as namesMapping } from './names.json'
 
 type Fills = { [key : string] : string }
 
@@ -97,7 +98,11 @@ function buildIcon(svg : string) {
 
     return component
 }
-function buildComponent(fills : Fills) {
+function buildComponent(name : string, fills : Fills) {
+    let className = namesMapping[name] || name
+
+    if (className === 'React') className = 'ReactIcon'
+
     const component = ''
         + 'import React from "react"' + br
         + 'import Icon from "./icon"' + br
@@ -109,7 +114,7 @@ function buildComponent(fills : Fills) {
             ).join('')
         )
         + 'export type Props = {' + br
-        + '    fill : Fill,' + br
+        + '    fill? : Fill,' + br
         + '}' + br
         + '' + br
         + 'export const fillLookup = {' + br
@@ -120,7 +125,11 @@ function buildComponent(fills : Fills) {
         )
         + '}' + br
         + '' + br
-        + 'export default class Component extends React.Component<Props> {' + br
+        + `export default class ${className} extends React.Component<Props> {` + br
+        + `    public static defaultProps = {` + br
+        + `        fill : undefined,` + br
+        + `    }` + br
+        + `` + br
         + `    public render() {` + br
         + `        const fill = fillLookup[this.props.fill]` + br
         + `        ` + br
@@ -150,7 +159,13 @@ for (const [ name, svg ] of Object.entries(svgs)) {
     fs.writeFileSync(path.join(folder, 'icon.tsx'), icon)
 
     const fills = findFills(name)
-    const component = buildComponent(fills)
+    const component = buildComponent(name, fills)
 
     fs.writeFileSync(path.join(folder, 'component.tsx'), component)
 }
+
+fs.writeFileSync(path.join(src, 'index.ts'),
+    Object.keys(svgs).map(name =>
+        `export { default as ${namesMapping[name] || name} } from ${JSON.stringify(`./${name}/component`)}${br}`
+    ).join('')
+)

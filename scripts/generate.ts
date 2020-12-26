@@ -5,6 +5,7 @@ import svgs from 'seti-icons/lib/icons.json'
 import definitions from 'seti-icons/lib/definitions.json'
 import { default as colorsMapping } from './colors.json'
 import { default as namesMapping } from './names.json'
+import convert from 'react-attr-converter'
 
 type Fills = { [key : string] : string }
 
@@ -54,10 +55,16 @@ function buildIcon(svg : string) {
         })
 
         if (attributes) {
-            if (attributes.class) {
-                attributes.className = attributes.class
+            for (const name in attributes) {
+                let value = attributes[name]
 
-                delete attributes.class
+                // workarounds for code-search icon
+                if (name === 'stroke-linecap' && value === 'null') value = 'inherit'
+                if (name === 'stroke-linejoin' && value === 'null') value = 'inherit'
+
+                delete attributes[name]
+
+                attributes[convert(name)] = value
             }
         }
     }
@@ -98,43 +105,32 @@ function buildIcon(svg : string) {
 
     return component
 }
-function buildComponent(name : string, fills : Fills) {
-    let className = namesMapping[name] || name
-
-    if (className === 'React') className = 'ReactIcon'
-
+function buildComponent(fills : Fills) {
     const component = ''
         + 'import React from "react"' + br
         + 'import Icon from "./icon"' + br
         + '' + br
-        + 'export type Fill =' + br
-        + (
-            Object.keys(fills).map(fill =>
-                `    | ${JSON.stringify(fill)}${br}`
-            ).join('')
-        )
-        + 'export type Props = {' + br
-        + '    fill? : Fill,' + br
-        + '}' + br
-        + '' + br
-        + 'export const fillLookup = {' + br
+        + 'const fill = {' + br
         + (
             Object.entries(fills).map(([ name, color ]) =>
                 `    ${JSON.stringify(name)} : ${JSON.stringify(color)},${br}`
             ).join('')
         )
         + '}' + br
+        + 'type Fill = keyof typeof fill' + br
+        + 'type Props = {' + br
+        + '    fill? : Fill,' + br
+        + '}' + br
         + '' + br
-        + `export default class ${className} extends React.Component<Props> {` + br
+        + `export default class Component extends React.Component<Props> {` + br
+        + `    public static fill = fill` + br
         + `    public static defaultProps = {` + br
-        + `        fill : undefined,` + br
+        + `        fill : "default",` + br
         + `    }` + br
         + `` + br
         + `    public render() {` + br
-        + `        const fill = fillLookup[this.props.fill]` + br
-        + `        ` + br
         + `        return (` + br
-        + `            <Icon fill={fill}/>` + br
+        + `            <Icon fill={fill[this.props.fill]}/>` + br
         + `        )` + br
         + `    }` + br
         + '}' + br
@@ -159,7 +155,7 @@ for (const [ name, svg ] of Object.entries(svgs)) {
     fs.writeFileSync(path.join(folder, 'icon.tsx'), icon)
 
     const fills = findFills(name)
-    const component = buildComponent(name, fills)
+    const component = buildComponent(fills)
 
     fs.writeFileSync(path.join(folder, 'component.tsx'), component)
 }

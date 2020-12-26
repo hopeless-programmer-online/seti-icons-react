@@ -37,7 +37,22 @@ const index = ''
             .map(name => (''
                 + '                    <tr>' + br
                 + `                        <td>${name}</td>` + br
-                + `                        <td style={{ width : "32pt" }}><${name}/></td>` + br
+                + `                        <td>` + br
+                + `                            <table>` + br
+                + `                                <tbody>` + br
+                + `                                    <tbody>` + br
+                + `                                        {` + br
+                + `                                            Object.keys(${name}.fill).map((fill, key) =>` + br
+                + `                                                <tr key={key}>` + br
+                + `                                                    <td>{fill}</td>` + br
+                + `                                                    <td style={{ width : '32pt' }}><${name} fill={fill}/></td>` + br
+                + `                                                </tr>` + br
+                + `                                            )` + br
+                + `                                        }` + br
+                + `                                    </tbody>` + br
+                + `                                </tbody>` + br
+                + `                            </table>` + br
+                + `                        </td>` + br
                 + '                    </tr>' + br
             ))
             .join('')

@@ -36,8 +36,8 @@ async function wait(stream : Readable, sequence : string) {
 
 it('Should be compatible with next.js', async () => {
     const port = 3001
-    const test = path.join(__dirname, '../test')
-    const next = path.join(__dirname, '../node_modules/.bin/next')
+    const test = JSON.stringify(path.join(__dirname, '../test'))
+    const next = JSON.stringify(path.join(__dirname, '../node_modules/.bin/next'))
     const server = spawn(`cd ${test} && ${next} start -p ${port}`, { shell : true })
 
     // server.stdin.addListener('data', x => console.log(`in : ${x.toString('utf8')}`))

@@ -3,6 +3,5 @@ src
 dist
 test/node_modules
 test/.next
-test/pages
 test/tsconfig.json
 test/next-env.d.ts

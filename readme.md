@@ -12,7 +12,7 @@ npm i hopeless-programmer-online/seti-icons-react#development
 
 Then import required icons from it:
 
-```react
+```typescript
 import { TypeScript, ReactIcon } from 'seti-icons-react'
 
 class MyComponent extends React.Component {

@@ -7,13 +7,17 @@ export default class Index extends React.Component {
         return (
             <article className={styles.article}>
                 <header>
-                    <h1>ICONS</h1>
+                    {/* <h1>ICONS</h1> */}
                 </header>
                 <main>
                     {
                         Object.entries(icons).map(([ name, Icon ], key1) =>
                             Object.keys(Icon.fill).map((fill, key2) =>
                                 <figure key={`${key1}-${key2}`}>
+                                    {/* <figcaption>
+                                        <h2>{name}</h2>
+                                        <i>{fill}</i>
+                                    </figcaption> */}
                                     <Icon fill={fill as keyof typeof Icon.fill}/>
                                 </figure>
                             )
@@ -21,7 +25,7 @@ export default class Index extends React.Component {
                     }
                 </main>
                 <footer>
-                    <span>{Object.values(icons).length}</span> icons in <span>{Object.values(icons).reduce((number, icon) => number + Object.keys(icon.fill).length, 0)}</span> variants
+                    {/* <span>{Object.values(icons).length}</span> icons in <span>{Object.values(icons).reduce((number, icon) => number + Object.keys(icon.fill).length, 0)}</span> variants */}
                 </footer>
             </article>
         )

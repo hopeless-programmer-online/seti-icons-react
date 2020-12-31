@@ -1,6 +1,7 @@
-node_modules
 src
 dist
+node_modules
+scripts/__image_snapshots__/__diff_output__
 test/node_modules
 test/.next
 test/tsconfig.json

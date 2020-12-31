@@ -1,6 +1,6 @@
 # seti-icons-react
 
-![GitHub package.json version (branch)](https://img.shields.io/github/package-json/v/hopeless-programmer-online/seti-icons-react/development)
+![GitHub package.json version (branch)](https://img.shields.io/github/package-json/v/hopeless-programmer-online/seti-icons-react/ci)
 
 [React](https://github.com/facebook/react)/[TypeScript](https://github.com/microsoft/TypeScript) version of [seti-icons](https://www.npmjs.com/package/seti-icons) used in [Monako](https://github.com/Microsoft/monaco-editor) editor which powers [Visual Studio Code](https://github.com/Microsoft/vscode).
 

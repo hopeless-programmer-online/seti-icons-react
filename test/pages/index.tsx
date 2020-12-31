@@ -14,10 +14,6 @@ export default class Index extends React.Component {
                         Object.entries(icons).map(([ name, Icon ], key1) =>
                             Object.keys(Icon.fill).map((fill, key2) =>
                                 <figure key={`${key1}-${key2}`}>
-                                    <figcaption>
-                                        <h2>{name}</h2>
-                                        <i>{fill}</i>
-                                    </figcaption>
                                     <Icon fill={fill as keyof typeof Icon.fill}/>
                                 </figure>
                             )

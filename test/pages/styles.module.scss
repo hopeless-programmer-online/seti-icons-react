@@ -28,24 +28,9 @@
                 border-color: rgb(30, 30, 30);
             }
 
-            > figcaption {
-                text-align: center;
-
-                > h2 {
-                    font-size: 12pt;
-                    margin: 0;
-                }
-                > i {
-                    margin-left: 2pt;
-                    margin-right: 2pt;
-                    font-size: 10pt;
-                    color: rgb(133, 133, 133);
-                }
-            }
             > svg {
-                flex-grow: 1;
-                max-width: 64pt;
-                max-height: 64pt;
+                width: 64px;
+                height: auto;
             }
         }
     }

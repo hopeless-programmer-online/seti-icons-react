@@ -38,107 +38,12 @@ function findFills(name : string) : Fills {
         default : mapColor(definitions.default[1]),
     };
 }
-function buildIcon(svg : string) {
-    const xml = xml2js(svg, { alwaysArray : true })
-
-    function iterate(element : Element | ElementCompact) {
-        const { elements, attributes } = element
-
-        if (elements) elements.forEach(element => {
-            if (element.type !== 'text') {
-                iterate(element)
-
-                return
-            }
-
-            element.text = `{${JSON.stringify(element.text)}}`
-        })
-
-        if (attributes) {
-            for (const name in attributes) {
-                let value = attributes[name]
-
-                // workarounds for code-search icon
-                if (name === 'stroke-linecap' && value === 'null') value = 'inherit'
-                if (name === 'stroke-linejoin' && value === 'null') value = 'inherit'
-
-                delete attributes[name]
-
-                attributes[convert(name)] = value
-            }
-        }
-    }
-
-    iterate(xml)
-
-    xml.elements[0].attributes = {
-        ...xml.elements[0].attributes,
-        fill : '%FILL%',
-    }
-
-    const component = ''
-        + 'import React from "react"' + br
-        + '' + br
-        + 'export type Props = {' + br
-        + '    fill? : string,' + br
-        + '}' + br
-        + '' + br
-        + 'export default class Icon extends React.Component<Props> {' + br
-        + `    public static defaultProps = {` + br
-        + `        fill : undefined,` + br
-        + `    }` + br
-        + `    ` + br
-        + `    public render() {` + br
-        + `        const { fill } = this.props` + br
-        + `        ` + br
-        + `        return (` + br
-        + (
-            '            // ' + svg + br +
-            '            ' +
-            js2xml(xml, { spaces : 4 })
-                .replace(/\n/g, '\n            ')
-                .replace(/"%FILL%"/, '{fill}')
-        ) + br
-        + `        )` + br
-        + `    }` + br
-        + '}' + br
-
-    return component
-}
-function buildComponent(fills : Fills) {
-    const component = ''
-        + 'import React from "react"' + br
-        + 'import Icon from "./icon"' + br
-        + '' + br
-        + 'const fill = {' + br
-        + (
-            Object.entries(fills).map(([ name, color ]) =>
-                `    ${JSON.stringify(name)} : ${JSON.stringify(color)},${br}`
-            ).join('')
-        )
-        + '}' + br
-        + 'type Fill = keyof typeof fill' + br
-        + 'type Props = {' + br
-        + '    fill? : Fill,' + br
-        + '}' + br
-        + '' + br
-        + `export default class Component extends React.Component<Props> {` + br
-        + `    public static fill = fill` + br
-        + `    public static defaultProps = {` + br
-        + `        fill : "default",` + br
-        + `    }` + br
-        + `` + br
-        + `    public render() {` + br
-        + `        return (` + br
-        + `            <Icon fill={fill[this.props.fill]}/>` + br
-        + `        )` + br
-        + `    }` + br
-        + '}' + br
-
-    return component
-}
 
 const br = '\r\n'
+const xmlns = {
+    'xmlns' : 'http://www.w3.org/2000/svg',
+    'xmlns:xlink' : 'http://www.w3.org/1999/xlink',
+}
 const src = path.join(__dirname, '../src')
 
 if (fs.existsSync(src)) fs.rmSync(src, { recursive : true })
@@ -179,8 +84,10 @@ for (const [ name, svg ] of Object.entries(svgs)) {
     iterate(xml)
 
     const { attributes } = xml.elements[0]
+    const xml2 = JSON.parse(JSON.stringify(xml))
 
-    xml.elements[0].attributes = {}
+    xml.elements[0].attributes = { ...attributes, ...xmlns }
+    xml2.elements[0].attributes = {}
 
     const fills = findFills(name)
 
@@ -190,39 +97,66 @@ for (const [ name, svg ] of Object.entries(svgs)) {
         + 'const theme = {' + br
         + (
             Object.entries(fills).map(([ name, color ]) =>
-                `    ${JSON.stringify(name)} : ${JSON.stringify(color)},${br}`
+                `    ${ JSON.stringify(name) } : ${ JSON.stringify(color) },${br}`
             ).join('')
         )
         + '}' + br
         + 'type Theme = keyof typeof theme | null' + br
+        + 'type Render = "svg" | "css"' + br
         + 'type Props = ComponentProps<"svg"> & {' + br
         + '    theme? : Theme,' + br
+        + '    render? : Render,' + br
         + '}' + br
         + '' + br
         + 'export default class Component extends React.Component<Props> {' + br
         + `    public static theme = theme` + br
         + '    public static defaultProps = {' + br
         + `        theme : null,` + br
+        + `        render : "svg",` + br
         + '    }' + br
         + '' + br
         + '    public render() {' + br
+        + '        const { render, theme } = this.props' + br
+        + '' + br
+        + '        if (render === "css") {' + br
+        + '            const { backgroundSize } = this.props.style || {}' + br
+        + '            const width = this.props.width != undefined ? this.props.width : backgroundSize' + br
+        + '            const height = this.props.height != undefined ? this.props.height : backgroundSize' + br
+        + `            const backgroundImage = \`url(\${ JSON.stringify(\`data:image/svg+xml,${
+            js2xml(xml)
+        }\`) })\`` + br
+        // + '                .replace(/<svg/, `<svg fill=${ JSON.stringify(Component.theme[theme] || "") }`)' + br
+        + '' + br
+        + '            return (' + br
+        + '                <span' + br
+        + '                    style={{' + br
+        + '                        width,' + br
+        + '                        height,' + br
+        + '                        backgroundImage,' + br
+        + '                        backgroundRepeat : "no-repeat",' + br
+        + '                        backgroundPosition : "center",' + br
+        + '                        display : "inline-block",' + br
+        + '                        ...this.props as ComponentProps<"span">,' + br
+        + '                    }}' + br
+        + '                />' + br
+        + '            )' + br
+        + '        }' + br
+        + '' + br
         + '        const props : SVGProps<SVGSVGElement> | { [key: string] : string } = {' + br
         + '            ...this.props,' + br
         +(
             Object.entries(attributes)
-                .map(([ key, value ]) => `            ${JSON.stringify(key)}: ${JSON.stringify(value)},${br}`)
+                .map(([ key, value ]) => `            ${ JSON.stringify(key) }: ${ JSON.stringify(value) },${br}`)
                 .join('')
         )
         + '        }' + br
-        + '        ' + br
-        + '        const { theme } = this.props' + br
-        + '        ' + br
+        + '' + br
         + '        if (theme) props.fill = Component.theme[theme]' + br
-        + '        ' + br
+        + '' + br
         + '        return (' + br
         + (
             '            ' +
-            js2xml(xml, { spaces : 4 })
+            js2xml(xml2, { spaces : 4 })
                 .replace(/^<svg>/, '<svg {...props}>')
                 .replace(/\n/g, '\n            ')
         ) + br

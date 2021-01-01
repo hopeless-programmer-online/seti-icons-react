@@ -16,18 +16,17 @@ npm i hopeless-programmer-online/seti-icons-react#development
 Then import required icons from it:
 
 ```tsx
-import { TypeScript, ReactIcon } from 'seti-icons-react'
+import { TypeScript } from 'seti-icons-react'
 
 class MyComponent extends React.Component {
     render() {
         return (
             <figure>
                 <figcaption>
-                    Hello, TypeScript & React!
+                    Hello, TypeScript!
                 </figcaption>
 
-                <TypeScript/>
-                <ReactIcon/>
+                <TypeScript theme="extension/.ts"/>
             </figure>
         )
     }

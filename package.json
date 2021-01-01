@@ -47,14 +47,10 @@
     "xml-js": "^1.6.11"
   },
   "scripts": {
-    "clean": "rimraf src dist test/.next test/node_modules test/next-env.d.ts test/tsconfig.json",
+    "clean": "rimraf src dist",
     "generate-src": "ts-node scripts/generate.ts",
     "build-dist": "tsc",
-    "generate-test": "npx ts-node scripts/generate-test.ts",
-    "build": "npm run generate-src && npm run build-dist && npm run generate-test",
-    "pretest": "ts-node scripts/build-next-test.ts",
-    "test": "jest",
-    "prepublishOnly": "npm run build",
+    "build": "npm run generate-src && npm run build-dist",
     "install": "npm run build"
   },
   "dependencies": {}

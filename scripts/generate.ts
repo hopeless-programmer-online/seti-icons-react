@@ -146,18 +146,89 @@ if (fs.existsSync(src)) fs.rmSync(src, { recursive : true })
 fs.mkdirSync(src)
 
 for (const [ name, svg ] of Object.entries(svgs)) {
-    const folder = path.join(src, name)
+    const xml = xml2js(svg, { alwaysArray : true })
 
-    fs.mkdirSync(folder)
+    function iterate(element : Element | ElementCompact) {
+        const { elements, attributes } = element
 
-    const icon = buildIcon(svg)
+        if (elements) elements.forEach(element => {
+            if (element.type !== 'text') {
+                iterate(element)
 
-    fs.writeFileSync(path.join(folder, 'icon.tsx'), icon)
+                return
+            }
 
-    const fills = findFills(name)
-    const component = buildComponent(fills)
+            element.text = `{${JSON.stringify(element.text)}}`
+        })
 
-    fs.writeFileSync(path.join(folder, 'component.tsx'), component)
+        if (attributes) {
+            for (const name in attributes) {
+                let value = attributes[name]
+
+                // workarounds for code-search icon
+                if (name === 'stroke-linecap' && value === 'null') value = 'inherit'
+                if (name === 'stroke-linejoin' && value === 'null') value = 'inherit'
+
+                delete attributes[name]
+
+                attributes[convert(name)] = value
+            }
+        }
+    }
+
+    iterate(xml)
+
+    const { attributes } = xml.elements[0]
+
+    xml.elements[0].attributes = {}
+
+    const component = ''
+        + 'import React, { ComponentProps, SVGProps } from "react"' + br
+        + '' + br
+        // + 'const fill = {' + br
+        // + (
+        //     Object.entries(fills).map(([ name, color ]) =>
+        //         `    ${JSON.stringify(name)} : ${JSON.stringify(color)},${br}`
+        //     ).join('')
+        // )
+        // + '}' + br
+        // + 'type Fill = keyof typeof fill' + br
+        + 'type Props = ComponentProps<"svg"> & {' + br
+        // + '    fill? : Fill,' + br
+        + '}' + br
+        + '' + br
+        + 'export default class Component extends React.Component<Props> {' + br
+        // + `    public static fill = fill` + br
+        + '    public static defaultProps = {' + br
+        // + `        fill : "default",` + br
+        + '    }' + br
+        + '' + br
+        + '    public render() {' + br
+        + '        const props : SVGProps<SVGSVGElement> | { [key: string] : string } = {' + br
+        + '            ...this.props,' + br
+        +(
+            Object.entries(attributes)
+                .map(([ key, value ]) => `            ${JSON.stringify(key)}: ${JSON.stringify(value)},${br}`)
+                .join('')
+        )
+        + '        }' + br
+        + '        ' + br
+        + '        return (' + br
+        + (
+            '            ' +
+            js2xml(xml, { spaces : 4 })
+                .replace(/^<svg>/, '<svg {...props}>')
+                .replace(/\n/g, '\n            ')
+        ) + br
+        + '        )' + br
+        + '    }' + br
+        + '}' + br
+
+    const file = path.join(src, name, `component.tsx`)
+    const folder = path.dirname(file)
+
+    fs.mkdirSync(folder, { recursive : true })
+    fs.writeFileSync(file, component)
 }
 
 fs.writeFileSync(path.join(src, 'index.ts'),

@@ -6,6 +6,7 @@ import definitions from 'seti-icons/lib/definitions.json'
 import { default as colorsMapping } from './colors.json'
 import { default as namesMapping } from './names.json'
 import convert from 'react-attr-converter'
+import rgb from 'hex-rgb'
 
 type Fills = { [key : string] : string }
 
@@ -48,6 +49,9 @@ const src = path.join(__dirname, '../src')
 
 if (fs.existsSync(src)) fs.rmSync(src, { recursive : true })
 
+// workaround for "operation not permitted" error on mkdir
+// await new Promise(resolve => setTimeout(resolve, 0))
+
 fs.mkdirSync(src)
 
 for (const [ name, svg ] of Object.entries(svgs)) {
@@ -83,11 +87,14 @@ for (const [ name, svg ] of Object.entries(svgs)) {
 
     iterate(xml)
 
+    // clone objects to prevent side effect on changes
     const { attributes } = xml.elements[0]
     const xml2 = JSON.parse(JSON.stringify(xml))
+    const xml3 = JSON.parse(JSON.stringify(xml))
 
-    xml.elements[0].attributes = { ...attributes, ...xmlns }
-    xml2.elements[0].attributes = {}
+    xml.elements[0].attributes = {}
+    xml2.elements[0].attributes = { ...attributes, ...xmlns, fill : '%FILL%' }
+    xml3.elements[0].attributes = { ...attributes, ...xmlns }
 
     const fills = findFills(name)
 
@@ -97,12 +104,15 @@ for (const [ name, svg ] of Object.entries(svgs)) {
         + 'const theme = {' + br
         + (
             Object.entries(fills).map(([ name, color ]) =>
-                `    ${ JSON.stringify(name) } : ${ JSON.stringify(color) },${br}`
+                `    ${ JSON.stringify(name) } : ${ JSON.stringify(rgb(color, { format : 'css' })) },${br}`
             ).join('')
         )
         + '}' + br
         + 'type Theme = keyof typeof theme | null' + br
-        + 'type Render = "svg" | "css"' + br
+        + 'type Render =' + br
+        + '    | "svg"' + br
+        + '    | "backgroundImage"' + br
+        + '    | "maskImage"' + br
         + 'type Props = ComponentProps<"svg"> & {' + br
         + '    theme? : Theme,' + br
         + '    render? : Render,' + br
@@ -117,15 +127,21 @@ for (const [ name, svg ] of Object.entries(svgs)) {
         + '' + br
         + '    public render() {' + br
         + '        const { render, theme } = this.props' + br
+        + '        const fill = Component.theme[theme] || ""' + br
         + '' + br
-        + '        if (render === "css") {' + br
+        + '        if (render === "backgroundImage") {' + br
         + '            const { backgroundSize } = this.props.style || {}' + br
         + '            const width = this.props.width != undefined ? this.props.width : backgroundSize' + br
         + '            const height = this.props.height != undefined ? this.props.height : backgroundSize' + br
         + `            const backgroundImage = \`url(\${ JSON.stringify(\`data:image/svg+xml,${
-            js2xml(xml)
+            js2xml(xml2)
+                .replace(/"%FILL%"/, '${JSON.stringify(fill)}')
         }\`) })\`` + br
-        // + '                .replace(/<svg/, `<svg fill=${ JSON.stringify(Component.theme[theme] || "") }`)' + br
+        + '            const props = { ...this.props as ComponentProps<"span"> }' + br
+        + '' + br
+        + '            if ("render" in props) delete props["render"]' + br
+        + '            if ("theme" in props) delete props["theme"]' + br
+        + '            if ("style" in props) delete props["style"]' + br
         + '' + br
         + '            return (' + br
         + '                <span' + br
@@ -136,9 +152,39 @@ for (const [ name, svg ] of Object.entries(svgs)) {
         + '                        backgroundRepeat : "no-repeat",' + br
         + '                        backgroundPosition : "center",' + br
         + '                        display : "inline-block",' + br
-        + '                        ...this.props as ComponentProps<"span">,' + br
+        + '                        ...props,' + br
         + '                    }}' + br
-        + '                />' + br
+        + '                >' + br
+        + '                    {this.props.children}' + br
+        + '                </span>' + br
+        + '            )' + br
+        + '        }' + br
+        + '        if (render === "maskImage") {' + br
+        + '            const { backgroundSize } = this.props.style || {}' + br
+        + '            const width = this.props.width != undefined ? this.props.width : backgroundSize' + br
+        + '            const height = this.props.height != undefined ? this.props.height : backgroundSize' + br
+        + `            const maskImage = \`url(\${ JSON.stringify(\`data:image/svg+xml,${ js2xml(xml3) }\`) })\`` + br
+        + '            const props = { ...this.props as ComponentProps<"span"> }' + br
+        + '' + br
+        + '            if ("render" in props) delete props["render"]' + br
+        + '            if ("theme" in props) delete props["theme"]' + br
+        + '            if ("style" in props) delete props["style"]' + br
+        + '' + br
+        + '            return (' + br
+        + '                <span' + br
+        + '                    style={{' + br
+        + '                        width,' + br
+        + '                        height,' + br
+        + '                        maskImage,' + br
+        + '                        backgroundColor : fill || "black",' + br
+        + '                        backgroundRepeat : "no-repeat",' + br
+        + '                        backgroundPosition : "center",' + br
+        + '                        display : "inline-block",' + br
+        + '                        ...props,' + br
+        + '                    }}' + br
+        + '                >' + br
+        + '                    {this.props.children}' + br
+        + '                </span>' + br
         + '            )' + br
         + '        }' + br
         + '' + br
@@ -151,12 +197,12 @@ for (const [ name, svg ] of Object.entries(svgs)) {
         )
         + '        }' + br
         + '' + br
-        + '        if (theme) props.fill = Component.theme[theme]' + br
+        + '        if (theme) props.fill = fill' + br
         + '' + br
         + '        return (' + br
         + (
             '            ' +
-            js2xml(xml2, { spaces : 4 })
+            js2xml(xml, { spaces : 4 })
                 .replace(/^<svg>/, '<svg {...props}>')
                 .replace(/\n/g, '\n            ')
         ) + br

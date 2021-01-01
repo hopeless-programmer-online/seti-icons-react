@@ -10,7 +10,7 @@
 Install the package from GitHub:
 
 ```
-npm i hopeless-programmer-online/seti-icons-react
+npm i seti-icons-react
 ```
 
 Then import required icons from it:

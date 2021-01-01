@@ -8,6 +8,11 @@
     "type": "git",
     "url": "git+https://github.com/hopeless-programmer-online/seti-icons-react.git"
   },
+  "keywords": [
+    "seti-ui",
+    "react",
+    "typescript"
+  ],
   "author": {
     "name": "Hopeless Programmer",
     "email": "me@hopeless-programmer.online"

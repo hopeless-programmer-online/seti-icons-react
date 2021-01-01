@@ -50,8 +50,7 @@
     "clean": "rimraf src dist",
     "generate-src": "ts-node scripts/generate.ts",
     "build-dist": "tsc",
-    "build": "npm run generate-src && npm run build-dist",
-    "install": "npm run build"
+    "build": "npm run generate-src && npm run build-dist"
   },
   "dependencies": {}
 }

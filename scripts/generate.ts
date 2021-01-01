@@ -182,25 +182,27 @@ for (const [ name, svg ] of Object.entries(svgs)) {
 
     xml.elements[0].attributes = {}
 
+    const fills = findFills(name)
+
     const component = ''
         + 'import React, { ComponentProps, SVGProps } from "react"' + br
         + '' + br
-        // + 'const fill = {' + br
-        // + (
-        //     Object.entries(fills).map(([ name, color ]) =>
-        //         `    ${JSON.stringify(name)} : ${JSON.stringify(color)},${br}`
-        //     ).join('')
-        // )
-        // + '}' + br
-        // + 'type Fill = keyof typeof fill' + br
+        + 'const theme = {' + br
+        + (
+            Object.entries(fills).map(([ name, color ]) =>
+                `    ${JSON.stringify(name)} : ${JSON.stringify(color)},${br}`
+            ).join('')
+        )
+        + '}' + br
+        + 'type Theme = keyof typeof theme | null' + br
         + 'type Props = ComponentProps<"svg"> & {' + br
-        // + '    fill? : Fill,' + br
+        + '    theme? : Theme,' + br
         + '}' + br
         + '' + br
         + 'export default class Component extends React.Component<Props> {' + br
-        // + `    public static fill = fill` + br
+        + `    public static theme = theme` + br
         + '    public static defaultProps = {' + br
-        // + `        fill : "default",` + br
+        + `        theme : null,` + br
         + '    }' + br
         + '' + br
         + '    public render() {' + br
@@ -212,6 +214,10 @@ for (const [ name, svg ] of Object.entries(svgs)) {
                 .join('')
         )
         + '        }' + br
+        + '        ' + br
+        + '        const { theme } = this.props' + br
+        + '        ' + br
+        + '        if (theme) props.fill = Component.theme[theme]' + br
         + '        ' + br
         + '        return (' + br
         + (
